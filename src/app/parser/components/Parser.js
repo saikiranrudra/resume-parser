@@ -4,7 +4,13 @@ import ReactJson from "react-json-view";
 import SuperParser from "../Parsers/SuperParser";
 import RChilliParser from "../Parsers/RChilliParser";
 import SovrenParser from "../Parsers/SovrenParser";
+import Select from "react-select";
 
+const data = [
+  { value: "super-parser", label: "Super Parser" },
+  { value: "sovren", label: "Sovren" },
+  { value: "r-chilli", label: "R Chilli" },
+];
 
 const Parser = ({ file }) => {
   const [json, setJson] = useState({});
@@ -14,16 +20,21 @@ const Parser = ({ file }) => {
   const [parser, setParser] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  let superParser = new SuperParser();
+  let sovrenParser = new SovrenParser();
+  let rChilliParser = new RChilliParser();
+
+  useEffect(() => {
+    if (selectedParser?.value == "super-parser") setParser(superParser);
+    if (selectedParser?.value == "sovren") setParser(sovrenParser);
+    if (selectedParser?.value == "r-chilli") setParser(rChilliParser);
+  }, [selectedParser]);
+
   const parse = async () => {
     if (file == null) {
       alert("Please Select the file");
       return;
     }
-
-    let superParser = new SuperParser();
-    let sovrenParser = new SovrenParser();
-    let rChilliParser = new RChilliParser();
-
 
     if (selectedParser == "super-parser") setParser(superParser);
     if (selectedParser == "sovren") setParser(sovrenParser);
@@ -37,26 +48,40 @@ const Parser = ({ file }) => {
     setLoading(true);
     let resumeJson = await parser.parse(file, () => setLoading(false));
     setJson(resumeJson);
-    setDisplayObj(resumeJson)
+    setDisplayObj(resumeJson);
   };
-  
+
   useEffect(() => {
-    if(parser == null) return;
+    if (parser == null) return;
 
-    if(standardize == true) {
-        if (selectedParser == "super-parser") setDisplayObj(parser.standardize(json))
-        if (selectedParser == "sovren") setDisplayObj(parser.standardize(json))
-        if (selectedParser == "r-chilli") setDisplayObj(parser.standardize(json?.ResumeParserData))
+    if (standardize == true) {
+      if (selectedParser?.value == "super-parser")
+        setDisplayObj(parser.standardize(json));
+      if (selectedParser?.value == "sovren")
+        setDisplayObj(parser.standardize(json));
+      if (selectedParser?.value == "r-chilli")
+        setDisplayObj(parser.standardize(json?.ResumeParserData));
     } else {
-        setDisplayObj(json);
+      setDisplayObj(json);
     }
-
-  }, [standardize])
+  }, [standardize]);
 
   return (
     <div>
       <div className="flex">
-        <select
+        <Select
+          className="basic-single"
+          classNamePrefix="select"
+          placeholder="Select Parser"
+          defaultValue={null}
+          isDisabled={loading}
+          isClearable={true}
+          isSearchable={true}
+          options={data}
+          onChange={setSelectedParser}
+        />
+
+        {/* <select
           name="parser-1"
           id="parser-1"
           className="mb-2"
@@ -67,7 +92,7 @@ const Parser = ({ file }) => {
           <option value="super-parser">Super Parser</option>
           <option value="sovren">Sovren</option>
           <option value="r-chilli">R Chilli</option>
-        </select>
+        </select> */}
         <p
           className="rounded-full bg-[#974EC3] text-[#fff] px-4 py-1 ms-2 cursor-pointer"
           onClick={parse}
@@ -79,7 +104,11 @@ const Parser = ({ file }) => {
       <div className="flex align-center">
         <p className="mb-0">Standardize</p>
         <label className="switch">
-          <input type="checkbox" defaultValue={false} onChange={(e) => setStandardize(e.target.checked)}/>
+          <input
+            type="checkbox"
+            defaultValue={false}
+            onChange={(e) => setStandardize(e.target.checked)}
+          />
           <span className="slider round"></span>
         </label>
       </div>
